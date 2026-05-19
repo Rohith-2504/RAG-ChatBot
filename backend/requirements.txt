@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai
+sqlalchemy
+pydantic
+pydantic-settings
+python-multipart
+chromadb
+langchain-text-splitters
+pypdf
+python-docx
+beautifulsoup4
+requests
+sentence-transformers
