@@ -1,12 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.session import Base, engine
-from app.api import chat, upload
+from app.api.chat import router as chat_router
 
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="RAG ChatBot")
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,9 +13,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
-app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
+app.include_router(
+    chat_router,
+    prefix="/api",
+    tags=["Chat"],
+)
+
 
 @app.get("/")
-def root():
-    return {"message": "RAG ChatBot API Running"}
+def home():
+    return {
+        "message": "RAG Chatbot Backend Running"
+    }

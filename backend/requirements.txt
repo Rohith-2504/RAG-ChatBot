@@ -13,3 +13,4 @@ python-docx
 beautifulsoup4
 requests
 sentence-transformers
+langchain-community
