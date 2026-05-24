@@ -105,6 +105,7 @@ class RAGService:
             "message": "Document indexed successfully",
             "file_type": result.get("type"),
             "chunks": len(chunks),
+            "content": text,
         }
 
     @staticmethod

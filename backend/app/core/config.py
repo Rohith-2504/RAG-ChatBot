@@ -10,6 +10,22 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
 
     # =========================
+    # Azure OpenAI Configuration
+    # =========================
+    AZURE_OPENAI_API_KEY: str = ""
+    AZURE_OPENAI_ENDPOINT: str = ""
+    AZURE_OPENAI_API_VERSION: str = "2024-02-15-preview"
+    AZURE_OPENAI_DEPLOYMENT_NAME: str = ""
+
+    # =========================
+    # SMTP Mail Configuration
+    # =========================
+    SMTP_SERVER: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+
+    # =========================
     # Model Configuration
     # =========================
     # Default Groq model

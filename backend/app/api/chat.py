@@ -65,6 +65,11 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 # Request Model
 # ==========================================
 
+class Attachment(BaseModel):
+    filename: str
+    file_type: str
+    content: str
+
 class ChatRequest(
     BaseModel
 ):
@@ -74,6 +79,8 @@ class ChatRequest(
     session_id: str | None = None
 
     user_id: str | None = None
+
+    attachments: list[Attachment] | None = None
 
 # ==========================================
 # CHAT ENDPOINT
@@ -104,6 +111,7 @@ async def chat(
             RouterService.generate_answer(
                 request.message,
                 session_id,
+                request.attachments,
             )
         )
 
@@ -225,19 +233,11 @@ async def upload_document(
 
         return {
             "status": "success",
-
-            "filename":
-                safe_original_name,
-
-            "saved_as":
-                f"{file_id}{extension}",
-
-            "file_type":
-                extension,
-
-            "size_bytes":
-                total_bytes,
-
+            "filename": safe_original_name,
+            "saved_as": f"{file_id}{extension}",
+            "file_type": extension,
+            "size_bytes": total_bytes,
+            "content": result.get("content", ""),
             "data": result,
         }
 

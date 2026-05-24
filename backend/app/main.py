@@ -19,6 +19,12 @@ from app.api.auth import (
     router as auth_router,
 )
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Create folder for AI generated assets
+os.makedirs("./generated_media", exist_ok=True)
+
 # ==========================================
 # FastAPI App
 # ==========================================
@@ -26,6 +32,7 @@ from app.api.auth import (
 app = FastAPI(
     title="RAG ChatBot API"
 )
+app.mount("/generated_media", StaticFiles(directory="./generated_media"), name="generated_media")
 
 # ==========================================
 # CORS
