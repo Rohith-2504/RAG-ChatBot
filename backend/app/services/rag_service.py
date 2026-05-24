@@ -1,50 +1,36 @@
 import os
 from pathlib import Path
 
-from pypdf import PdfReader
-from docx import Document
+from app.services.vector_store import (
+    add_documents,
+    search_documents,
+)
 
-from app.services.vector_store import add_documents, search_documents
+from app.services.media_service import (
+    MediaService,
+)
 
 
 class RAGService:
-    @staticmethod
-    def _read_file(file_path: str) -> str:
-        """
-        Read content from PDF, DOCX, or TXT files.
-        """
-        ext = Path(file_path).suffix.lower()
-
-        if ext == ".pdf":
-            reader = PdfReader(file_path)
-            text = ""
-            for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-            return text
-
-        elif ext == ".docx":
-            doc = Document(file_path)
-            return "\n".join([para.text for para in doc.paragraphs])
-
-        elif ext in [".txt", ".md"]:
-            with open(file_path, "r", encoding="utf-8") as f:
-                return f.read()
-
-        else:
-            raise Exception(f"Unsupported file type: {ext}")
 
     @staticmethod
-    def _split_text(text: str, chunk_size: int = 1000, overlap: int = 150):
+    def _split_text(
+        text: str,
+        chunk_size: int = 1000,
+        overlap: int = 150,
+    ):
         """
         Split text into overlapping chunks.
         """
+
         chunks = []
+
         start = 0
 
         while start < len(text):
+
             end = start + chunk_size
+
             chunk = text[start:end].strip()
 
             if chunk:
@@ -57,37 +43,82 @@ class RAGService:
     @staticmethod
     def ingest_document(file_path: str):
         """
-        Read a document, split it into chunks,
-        and store the chunks in ChromaDB.
+        Process uploaded file using MediaService,
+        split into chunks,
+        and store in vector database.
         """
+
         if not os.path.exists(file_path):
             raise Exception("File not found.")
 
-        text = RAGService._read_file(file_path)
+        # Process any file type
+        result = MediaService.process_file(
+            file_path
+        )
+
+        if result["status"] != "success":
+            raise Exception(
+                result.get(
+                    "message",
+                    "Failed to process file.",
+                )
+            )
+
+        text = result.get("content", "")
 
         if not text.strip():
-            raise Exception("No text could be extracted from the document.")
+            raise Exception(
+                "No text could be extracted."
+            )
 
-        chunks = RAGService._split_text(text)
+        # Split into chunks
+        chunks = RAGService._split_text(
+            text
+        )
 
         if not chunks:
-            raise Exception("No chunks were generated.")
+            raise Exception(
+                "No chunks were generated."
+            )
 
-        # Store chunks in your existing vector store
-        add_documents(chunks)
+        # Metadata
+        metadatas = [
+            {
+                "source": file_path,
+                "chunk_id": i,
+                "type": result.get(
+                    "type",
+                    "unknown",
+                ),
+            }
+            for i in range(len(chunks))
+        ]
+
+        # Store in vector DB
+        add_documents(
+            chunks,
+            metadatas,
+        )
 
         return {
+            "status": "success",
             "message": "Document indexed successfully",
+            "file_type": result.get("type"),
             "chunks": len(chunks),
         }
 
     @staticmethod
     def retrieve_context(query: str):
         """
-        Search ChromaDB and return the most relevant text.
+        Retrieve relevant chunks
+        from vector database.
         """
+
         try:
-            results = search_documents(query)
+
+            results = search_documents(
+                query
+            )
 
             if not results:
                 return ""
@@ -95,18 +126,34 @@ class RAGService:
             contexts = []
 
             for result in results:
-                # If vector_store returns dictionaries
+
+                # Dict format
                 if isinstance(result, dict):
-                    content = result.get("content", "")
+
+                    content = result.get(
+                        "content",
+                        "",
+                    )
+
                 else:
-                    # If it returns strings
                     content = str(result)
 
                 if content:
                     contexts.append(content)
 
-            return "\n\n".join(contexts)
+            # Limit context size
+            final_context = "\n\n".join(
+                contexts
+            )
+
+            MAX_CONTEXT_CHARS = 4000
+
+            return final_context[
+                :MAX_CONTEXT_CHARS
+            ]
 
         except Exception as e:
+
             print(f"RAG Error: {e}")
+
             return ""

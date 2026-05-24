@@ -14,3 +14,7 @@ beautifulsoup4
 requests
 sentence-transformers
 langchain-community
+easyocr
+opencv-python
+openai-whisper
+moviepy

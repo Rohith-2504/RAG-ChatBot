@@ -16,10 +16,18 @@ class WebSearchService:
             "api_key": settings.TAVILY_API_KEY,
             "query": query,
             "search_depth": "basic",
-            "max_results": 5,
+            "max_results": 3,
         }
 
-        response = requests.post(url, json=payload)
+        try:
+            response = requests.post(
+                url,
+                json=payload,
+                timeout=3,
+            )
+
+        except requests.RequestException as e:
+            return f"Web search failed: {str(e)}"
 
         if response.status_code != 200:
             return "Failed to fetch web results."
